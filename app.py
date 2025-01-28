@@ -9,18 +9,13 @@ import sys
 import io
 import re
 
-# Load environment variables from .env file
 load_dotenv()
 
-# Get API key for GROQ model
 api_key = os.environ.get('GROQ_KEY')
 
-# Define the function to clean escape sequences
 def clean_terminal_codes(text):
-    # Remove any ANSI escape sequences
     return re.sub(r'\x1b\[[0-9;]*m', '', text)
 
-# Initialize Flask app
 app = Flask(__name__)
 
 # Web Search Agent setup
@@ -56,39 +51,29 @@ multi_aid_agent = Agent(
     markdown=True
 )
 
-# Route for serving the HTML page
 @app.route('/')
 def index():
-    return render_template('index.html')  # Your HTML file should be named 'index.html'
+    return render_template('index.html')
 
-# Route to handle questions asked by the user
 @app.route('/ask-bot', methods=['POST'])
 def ask_question():
-    # Get the question from the POST request
     question = request.json.get('question')
 
     if not question:
         return jsonify({"error": "No question provided"}), 400
 
-    # Redirect stdout to capture the response
     original_stdout = sys.stdout
     sys.stdout = io.StringIO()
 
-    # Generate the response for the question
     multi_aid_agent.print_response(question, stream=True)
 
-    # Capture the response from the redirected stdout
     captured_response = sys.stdout.getvalue()
 
-    # Reset stdout back to the original
     sys.stdout = original_stdout
 
-    # Clean the response to remove terminal codes
     cleaned_response = clean_terminal_codes(captured_response)
 
-    # Return the cleaned response in the JSON response
     return jsonify({"response": cleaned_response.strip()})
 
-# Run the Flask app
 if __name__ == '__main__':
     app.run(debug=True)
