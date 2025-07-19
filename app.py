@@ -9,9 +9,10 @@ import sys
 import io
 import re
 
-load_dotenv()
+load_dotenv(override=True)
 
 api_key = os.environ.get('GROQ_KEY')
+print(api_key)
 
 def clean_terminal_codes(text):
     return re.sub(r'\x1b\[[0-9;]*m', '', text)
